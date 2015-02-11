@@ -66,18 +66,8 @@ public class InvoiceDataSource {
 	this.invoiceCount = invoiceCount;
   }
 
-  private String getInvoiceIds() {
-	String invoiceIds = "";
-
-	for (int i = 0; i < this.invoiceIds.length; i++) {
-	  if (i == 0) {
-		invoiceIds = Integer.toString(this.invoiceIds[i]);
-	  } else {
-		invoiceIds += "," + Integer.toString(this.invoiceIds[i]);
-	  }
-	}
-
-	return invoiceIds;
+  private int[] getInvoiceIds() {
+	return this.invoiceIds;
   }
 
   private boolean setInvoiceIds(ResultSet rs) throws SQLException {
@@ -239,12 +229,29 @@ public class InvoiceDataSource {
 	sql += ") AS cs JOIN customer AS c ON c.c_customer_sk = cs.cs_bill_customer_sk ";
 	sql += "JOIN customer_address AS ca ON ca.ca_address_sk = cs.cs_bill_addr_sk ";
 	sql += "JOIN item AS i ON i.i_item_sk = cs.cs_item_sk ";
-	sql += "WHERE cs.cs_bill_cdemo_sk IN (" + getInvoiceIds() + ") AND ";
+	sql += "WHERE cs.cs_bill_cdemo_sk IN (" + getInvoiceIdsAsString() + ") AND ";
 	sql += "cs.rn <= " + InvoiceDataProcessing.POSITIONS_PER_INVOICE + " ";
 	sql += "ORDER BY cs.cs_bill_cdemo_sk, c.c_customer_sk, cs.rn;";
 //	logger.debug("/-> Query used for Invoices: " + sql);
 
 	return sql;
+  }
+  
+  private String getInvoiceIdsAsString() {
+	String ids = "";
+	int[] invoiceIds;
+
+	invoiceIds = getInvoiceIds();
+	if (invoiceIds.length > 0) {
+	  ids = Integer.toString(invoiceIds[0]);
+	  if (invoiceIds.length > 1) {
+		for (int i = 1; i < invoiceIds.length; i++) {
+		  ids += "," + Integer.toString(invoiceIds[i]);
+		}
+	  }
+	}
+
+	return ids;
   }
 
   private long getDurationSinceLastTimeStamp() {
